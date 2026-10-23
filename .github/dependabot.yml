@@ -1,0 +1,33 @@
+# ==============================================================================
+# Configuración de Dependabot (IE3 - DOY0101)
+# Escaneo automatizado semanal de dependencias y acciones de GitHub
+# ==============================================================================
+version: 2
+updates:
+  # Escaneo de dependencias de Python (pip / requirements.txt)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Santiago"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+      - "automated-pr"
+
+  # Escaneo de versiones de GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "America/Santiago"
+    open-pull-requests-limit: 10
+    labels:
+      - "github-actions"
+      - "ci-cd"
+
