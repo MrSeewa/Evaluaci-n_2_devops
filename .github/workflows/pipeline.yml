@@ -17,7 +17,7 @@ jobs:
   # IE2: Pruebas Automatizadas y Cobertura de Código (20%)
   # ============================================================================
   test:
-    name: 🧪 Unit Tests & Coverage (IE2)
+    name: Unit Tests & Coverage (IE2)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del repositorio
@@ -58,7 +58,7 @@ jobs:
   # IE3: Análisis de Seguridad, SAST y Dependencias con Bloqueo (20%)
   # ============================================================================
   security:
-    name: 🔒 Security Analysis & SAST (IE3)
+    name: Security Analysis & SAST (IE3)
     runs-on: ubuntu-latest
     needs: [test]
     steps:
@@ -97,7 +97,7 @@ jobs:
             snyk auth "$SNYK_TOKEN"
             snyk test --severity-threshold=high
           else
-            echo "⚠️ AVISO: SNYK_TOKEN no está configurado en los Secretos de GitHub."
+            echo "AVISO: SNYK_TOKEN no está configurado en los Secretos de GitHub."
             echo "Para habilitar Snyk en producción, agregue SNYK_TOKEN en Settings -> Secrets and variables -> Actions."
             echo "Continuando con la validación de seguridad de Bandit y Safety completada exitosamente."
           fi
@@ -106,7 +106,7 @@ jobs:
   # IE1: Construcción y Optimización de Imagen Docker (20%)
   # ============================================================================
   build:
-    name: 🐳 Docker Multi-Stage Build (IE1)
+    name: Docker Multi-Stage Build (IE1)
     runs-on: ubuntu-latest
     needs: [test, security]
     steps:
@@ -134,7 +134,7 @@ jobs:
   # IE4: Despliegue en Entorno Simulado y Trazabilidad (20%)
   # ============================================================================
   deploy:
-    name: 🚀 Automated Deploy & Traceability (IE4)
+    name: Automated Deploy & Traceability (IE4)
     runs-on: ubuntu-latest
     # Garantiza que el despliegue SOLO ocurra si los tests, seguridad y build fueron exitosos
     needs: [test, security, build]
@@ -156,11 +156,11 @@ jobs:
 
       - name: Prueba de humo funcional (Smoke Test)
         run: |
-          echo "Probando endpoint de catálogo /api/v1/products..."
-          RESPONSE=$(curl -s http://localhost:8000/api/v1/products)
+          echo "Probando endpoint de catálogo /api/v1/productos..."
+          RESPONSE=$(curl -s http://localhost:8000/api/v1/productos)
           echo "Respuesta del microservicio: $RESPONSE"
           echo "Verificando respuesta JSON no vacía..."
-          curl --fail http://localhost:8000/api/v1/products
+          curl --fail http://localhost:8000/api/v1/productos
 
       - name: Generar reporte de auditoría y trazabilidad del despliegue
         run: |
@@ -192,4 +192,3 @@ jobs:
         if: always()
         run: |
           docker compose down
-
