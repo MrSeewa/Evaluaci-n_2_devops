@@ -45,7 +45,7 @@ jobs:
             --cov-fail-under=80
 
       - name: Publicar reporte de cobertura como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report
@@ -182,7 +182,7 @@ jobs:
           cat artifacts/deployment-audit.json
 
       - name: Publicar artefacto de trazabilidad
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: deployment-traceability-log
           path: artifacts/deployment-audit.json
