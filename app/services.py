@@ -1,112 +1,135 @@
 from typing import Dict, List, Optional
-from app.schemas import ProductCreate, ProductUpdate, ProductResponse
+from app.schemas import ProductoCrear, ProductoActualizar, ProductoRespuesta
 
 
-class ProductService:
+class ServicioProducto:
     def __init__(self):
-        self._products: Dict[int, ProductResponse] = {}
-        self._next_id = 1
-        self._seed_initial_data()
+        self._productos: Dict[int, ProductoRespuesta] = {}
+        self._siguiente_id = 1
+        self._cargar_datos_iniciales()
 
-    def _seed_initial_data(self) -> None:
-        initial_items = [
-            ProductCreate(
-                name="Laptop Pro 15",
-                description="Laptop para desarrolladores y alto rendimiento",
-                price=1200.0,
+    def _cargar_datos_iniciales(self) -> None:
+        articulos_iniciales = [
+            ProductoCrear(
+                nombre="Laptop Pro 15",
+                descripcion="Laptop para desarrolladores y alto rendimiento",
+                precio=1200.0,
                 stock=10,
-                category="Computación"
+                categoria="Computación"
             ),
-            ProductCreate(
-                name="Mouse Inalámbrico",
-                description="Mouse ergonómico con sensor óptico",
-                price=25.50,
+            ProductoCrear(
+                nombre="Mouse Inalámbrico",
+                descripcion="Mouse ergonómico con sensor óptico",
+                precio=25.50,
                 stock=50,
-                category="Periféricos"
+                categoria="Periféricos"
             ),
-            ProductCreate(
-                name="Teclado Mecánico RGB",
-                description="Switches mecánicos táctiles con retroiluminación",
-                price=89.90,
+            ProductoCrear(
+                nombre="Teclado Mecánico RGB",
+                descripcion="Switches mecánicos táctiles con retroiluminación",
+                precio=89.90,
                 stock=25,
-                category="Periféricos"
+                categoria="Periféricos"
             )
         ]
-        for item in initial_items:
-            self.create_product(item)
+        for articulo in articulos_iniciales:
+            self.crear_producto(articulo)
 
-    def reset_store(self) -> None:
+    def reiniciar_almacen(self) -> None:
         """Reinicia el almacén a los datos iniciales (usado para tests)."""
-        self._products.clear()
-        self._next_id = 1
-        self._seed_initial_data()
+        self._productos.clear()
+        self._siguiente_id = 1
+        self._cargar_datos_iniciales()
 
-    def list_all(self, category: Optional[str] = None) -> List[ProductResponse]:
-        items = list(self._products.values())
-        if category:
-            items = [item for item in items if item.category.lower() == category.lower()]
-        return items
+    def listar_todos(self, categoria: Optional[str] = None) -> List[ProductoRespuesta]:
+        articulos = list(self._productos.values())
+        if categoria:
+            articulos = [item for item in articulos if item.categoria.lower() == categoria.lower()]
+        return articulos
 
-    def get_by_id(self, product_id: int) -> Optional[ProductResponse]:
-        return self._products.get(product_id)
+    def obtener_por_id(self, id_producto: int) -> Optional[ProductoRespuesta]:
+        return self._productos.get(id_producto)
 
-    def create_product(self, data: ProductCreate) -> ProductResponse:
-        product_id = self._next_id
-        self._next_id += 1
-        product = ProductResponse(
-            id=product_id,
-            name=data.name.strip(),
-            description=data.description.strip() if data.description else None,
-            price=round(data.price, 2),
-            stock=data.stock,
-            category=data.category.strip()
+    def crear_producto(self, datos: ProductoCrear) -> ProductoRespuesta:
+        id_producto = self._siguiente_id
+        self._siguiente_id += 1
+        producto = ProductoRespuesta(
+            id=id_producto,
+            nombre=datos.nombre.strip(),
+            descripcion=datos.descripcion.strip() if datos.descripcion else None,
+            precio=round(datos.precio, 2),
+            stock=datos.stock,
+            categoria=datos.categoria.strip()
         )
-        self._products[product_id] = product
-        return product
+        self._productos[id_producto] = producto
+        return producto
 
-    def update_product(self, product_id: int, data: ProductUpdate) -> Optional[ProductResponse]:
-        current = self.get_by_id(product_id)
-        if not current:
+    def actualizar_producto(self, id_producto: int, datos: ProductoActualizar) -> Optional[ProductoRespuesta]:
+        actual = self.obtener_por_id(id_producto)
+        if not actual:
             return None
 
-        update_dict = data.model_dump(exclude_unset=True)
-        new_values = current.model_dump()
+        diccionario_actualizacion = datos.model_dump(exclude_unset=True)
+        nuevos_valores = actual.model_dump()
 
-        for key, value in update_dict.items():
-            if value is not None:
-                if key in ["name", "description", "category"] and isinstance(value, str):
-                    new_values[key] = value.strip()
-                elif key == "price":
-                    new_values[key] = round(float(value), 2)
+        for clave, valor in diccionario_actualizacion.items():
+            if valor is not None:
+                if clave in ["nombre", "descripcion", "categoria"] and isinstance(valor, str):
+                    nuevos_valores[clave] = valor.strip()
+                elif clave == "precio":
+                    nuevos_valores[clave] = round(float(valor), 2)
                 else:
-                    new_values[key] = value
+                    nuevos_valores[clave] = valor
 
-        updated_product = ProductResponse(**new_values)
-        self._products[product_id] = updated_product
-        return updated_product
+        producto_actualizado = ProductoRespuesta(**nuevos_valores)
+        self._productos[id_producto] = producto_actualizado
+        return producto_actualizado
 
-    def delete_product(self, product_id: int) -> bool:
-        if product_id in self._products:
-            del self._products[product_id]
+    def eliminar_producto(self, id_producto: int) -> bool:
+        if id_producto in self._productos:
+            del self._productos[id_producto]
             return True
         return False
 
-    def apply_discount(self, product_id: int, percentage: float) -> Optional[ProductResponse]:
-        """Aplica un porcentaje de descuento al producto (0 < percentage < 100)."""
-        if not (0 < percentage < 100):
+    def aplicar_descuento(self, id_producto: int, porcentaje: float) -> Optional[ProductoRespuesta]:
+        """Aplica un porcentaje de descuento al producto (0 < porcentaje < 100)."""
+        if not (0 < porcentaje < 100):
             raise ValueError("El porcentaje de descuento debe estar estrictamente entre 0 y 100")
 
-        product = self.get_by_id(product_id)
-        if not product:
+        producto = self.obtener_por_id(id_producto)
+        if not producto:
             return None
 
-        discount_multiplier = 1 - (percentage / 100.0)
-        new_price = round(product.price * discount_multiplier, 2)
-        if new_price <= 0:
-            new_price = 0.01  # precio mínimo permitido
+        multiplicador_descuento = 1 - (porcentaje / 100.0)
+        nuevo_precio = round(producto.precio * multiplicador_descuento, 2)
+        if nuevo_precio <= 0:
+            nuevo_precio = 0.01  # precio mínimo permitido
 
-        return self.update_product(product_id, ProductUpdate(price=new_price))
+        return self.actualizar_producto(id_producto, ProductoActualizar(precio=nuevo_precio))
+
+    # Métodos alias para retrocompatibilidad
+    def reset_store(self) -> None:
+        return self.reiniciar_almacen()
+
+    def list_all(self, category: Optional[str] = None):
+        return self.listar_todos(categoria=category)
+
+    def get_by_id(self, product_id: int):
+        return self.obtener_por_id(id_producto=product_id)
+
+    def create_product(self, data: ProductoCrear):
+        return self.crear_producto(datos=data)
+
+    def update_product(self, product_id: int, data: ProductoActualizar):
+        return self.actualizar_producto(id_producto=product_id, datos=data)
+
+    def delete_product(self, product_id: int):
+        return self.eliminar_producto(id_producto=product_id)
+
+    def apply_discount(self, product_id: int, percentage: float):
+        return self.aplicar_descuento(id_producto=product_id, porcentaje=percentage)
 
 
-product_service = ProductService()
-
+servicio_producto = ServicioProducto()
+ProductService = ServicioProducto
+product_service = servicio_producto

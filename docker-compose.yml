@@ -1,19 +1,16 @@
 # ==============================================================================
 # Orquestación con Docker Compose (IE4 & IE5 - DOY0101)
 # ==============================================================================
-version: "3.8"
-
 services:
   product-service:
     build:
       context: .
       dockerfile: Dockerfile
     image: product-inventory-microservice:latest
-    container_name: product-service-app
     ports:
-      - "8000:8000"
+      - "8000-8001:8000"
     environment:
-      - APP_NAME=Product Inventory Microservice
+      - APP_NAME=Microservicio de Inventario de Productos
       - APP_ENV=production
       - APP_VERSION=1.0.0
       - PORT=8000
@@ -45,4 +42,3 @@ services:
 networks:
   devops-network:
     driver: bridge
-

@@ -2,20 +2,20 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import APP_NAME, APP_VERSION, APP_ENV
+from app.config import NOMBRE_APP, VERSION_APP, ENTORNO_APP
 from app.schemas import (
-    HealthResponse,
-    ProductResponse,
-    ProductCreate,
-    ProductUpdate,
-    DiscountRequest,
-    ErrorResponse
+    RespuestaSalud,
+    ProductoRespuesta,
+    ProductoCrear,
+    ProductoActualizar,
+    SolicitudDescuento,
+    RespuestaError
 )
-from app.services import product_service
+from app.services import servicio_producto
 
 app = FastAPI(
-    title=APP_NAME,
-    version=APP_VERSION,
+    title=NOMBRE_APP,
+    version=VERSION_APP,
     description="Microservicio REST de Gestión de Productos e Inventario para Evaluación Parcial N°2 DOY0101."
 )
 
@@ -28,123 +28,152 @@ app.add_middleware(
 )
 
 
-@app.get("/", tags=["Root"])
-def root():
+@app.get("/", tags=["Raíz"])
+def raiz():
     return {
-        "service": APP_NAME,
-        "version": APP_VERSION,
-        "status": "online",
-        "docs": "/docs"
+        "servicio": NOMBRE_APP,
+        "version": VERSION_APP,
+        "estado": "en_linea",
+        "documentacion": "/docs"
     }
 
 
 @app.get(
     "/health",
-    response_model=HealthResponse,
-    tags=["Health"],
+    response_model=RespuestaSalud,
+    tags=["Salud"],
     summary="Healthcheck del microservicio para Kubernetes y Docker Compose"
 )
-def health_check():
-    return HealthResponse(
-        status="healthy",
-        version=APP_VERSION,
-        environment=APP_ENV,
-        service=APP_NAME
+def verificar_salud():
+    return RespuestaSalud(
+        estado="saludable",
+        version=VERSION_APP,
+        entorno=ENTORNO_APP,
+        servicio=NOMBRE_APP
     )
 
 
 @app.get(
-    "/api/v1/products",
-    response_model=List[ProductResponse],
-    tags=["Products"],
+    "/api/v1/productos",
+    response_model=List[ProductoRespuesta],
+    tags=["Productos"],
     summary="Listar todos los productos con filtro opcional por categoría"
 )
-def list_products(category: Optional[str] = Query(None, description="Filtrar por categoría")):
-    return product_service.list_all(category=category)
+@app.get(
+    "/api/v1/products",
+    response_model=List[ProductoRespuesta],
+    include_in_schema=False
+)
+def listar_productos(categoria: Optional[str] = Query(None, description="Filtrar por categoría")):
+    return servicio_producto.listar_todos(categoria=categoria)
 
 
 @app.get(
-    "/api/v1/products/{product_id}",
-    response_model=ProductResponse,
-    responses={404: {"model": ErrorResponse}},
-    tags=["Products"],
+    "/api/v1/productos/{id_producto}",
+    response_model=ProductoRespuesta,
+    responses={404: {"model": RespuestaError}},
+    tags=["Productos"],
     summary="Obtener un producto por su ID"
 )
-def get_product(product_id: int):
-    product = product_service.get_by_id(product_id)
-    if not product:
+@app.get(
+    "/api/v1/products/{id_producto}",
+    response_model=ProductoRespuesta,
+    include_in_schema=False
+)
+def obtener_producto(id_producto: int):
+    producto = servicio_producto.obtener_por_id(id_producto)
+    if not producto:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Producto con ID {product_id} no encontrado"
+            detail=f"Producto con ID {id_producto} no encontrado"
         )
-    return product
+    return producto
 
 
 @app.post(
-    "/api/v1/products",
-    response_model=ProductResponse,
+    "/api/v1/productos",
+    response_model=ProductoRespuesta,
     status_code=status.HTTP_201_CREATED,
-    tags=["Products"],
+    tags=["Productos"],
     summary="Crear un nuevo producto"
 )
-def create_product(product_in: ProductCreate):
-    return product_service.create_product(product_in)
+@app.post(
+    "/api/v1/products",
+    response_model=ProductoRespuesta,
+    include_in_schema=False
+)
+def crear_producto(datos_producto: ProductoCrear):
+    return servicio_producto.crear_producto(datos_producto)
 
 
 @app.put(
-    "/api/v1/products/{product_id}",
-    response_model=ProductResponse,
-    responses={404: {"model": ErrorResponse}},
-    tags=["Products"],
+    "/api/v1/productos/{id_producto}",
+    response_model=ProductoRespuesta,
+    responses={404: {"model": RespuestaError}},
+    tags=["Productos"],
     summary="Actualizar un producto existente"
 )
-def update_product(product_id: int, product_in: ProductUpdate):
-    updated = product_service.update_product(product_id, product_in)
-    if not updated:
+@app.put(
+    "/api/v1/products/{id_producto}",
+    response_model=ProductoRespuesta,
+    include_in_schema=False
+)
+def actualizar_producto(id_producto: int, datos_producto: ProductoActualizar):
+    producto_actualizado = servicio_producto.actualizar_producto(id_producto, datos_producto)
+    if not producto_actualizado:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Producto con ID {product_id} no encontrado para actualizar"
+            detail=f"Producto con ID {id_producto} no encontrado para actualizar"
         )
-    return updated
+    return producto_actualizado
 
 
 @app.delete(
-    "/api/v1/products/{product_id}",
+    "/api/v1/productos/{id_producto}",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={404: {"model": ErrorResponse}},
-    tags=["Products"],
+    responses={404: {"model": RespuestaError}},
+    tags=["Productos"],
     summary="Eliminar un producto por ID"
 )
-def delete_product(product_id: int):
-    deleted = product_service.delete_product(product_id)
-    if not deleted:
+@app.delete(
+    "/api/v1/products/{id_producto}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    include_in_schema=False
+)
+def eliminar_producto(id_producto: int):
+    eliminado = servicio_producto.eliminar_producto(id_producto)
+    if not eliminado:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Producto con ID {product_id} no encontrado para eliminar"
+            detail=f"Producto con ID {id_producto} no encontrado para eliminar"
         )
     return None
 
 
 @app.post(
-    "/api/v1/products/{product_id}/apply-discount",
-    response_model=ProductResponse,
+    "/api/v1/productos/{id_producto}/aplicar-descuento",
+    response_model=ProductoRespuesta,
     responses={
-        400: {"model": ErrorResponse},
-        404: {"model": ErrorResponse}
+        400: {"model": RespuestaError},
+        404: {"model": RespuestaError}
     },
-    tags=["Business Logic"],
+    tags=["Lógica de Negocio"],
     summary="Aplica un porcentaje de descuento calculando el nuevo precio"
 )
-def apply_discount(product_id: int, discount_in: DiscountRequest):
+@app.post(
+    "/api/v1/products/{id_producto}/apply-discount",
+    response_model=ProductoRespuesta,
+    include_in_schema=False
+)
+def aplicar_descuento(id_producto: int, solicitud_descuento: SolicitudDescuento):
     try:
-        updated = product_service.apply_discount(product_id, discount_in.percentage)
+        producto_con_descuento = servicio_producto.aplicar_descuento(id_producto, solicitud_descuento.porcentaje)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    if not updated:
+    if not producto_con_descuento:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Producto con ID {product_id} no encontrado para aplicar descuento"
+            detail=f"Producto con ID {id_producto} no encontrado para aplicar descuento"
         )
-    return updated
-
+    return producto_con_descuento
